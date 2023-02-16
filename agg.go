@@ -11,12 +11,11 @@ type slot struct {
 }
 
 type AggregatedMovingSumByTime struct {
-	duration time.Duration
-	slots    []slot
-	start    time.Time
-	current  int
-	sum      int
-	count    int
+	duration   time.Duration
+	slots      []slot
+	currentPos int
+	sum        int
+	count      int
 	sync.Mutex
 }
 
@@ -25,17 +24,16 @@ func NewAggregatedMovingSumByTime(duration time.Duration, n int) *AggregatedMovi
 	return &AggregatedMovingSumByTime{
 		slots:    make([]slot, n),
 		duration: duration,
-		start:    time.Now(),
 	}
 }
 
 func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 	// slot is delta / (duration / slotCount)
 	// Do multiplication first => (delta * slotCount) / duration
-	delta := timeSince(m.start)
+	delta := timeSince(time.Time{})
 	newPos := int((delta * time.Duration(len(m.slots))) / m.duration)
-	if newPos > m.current {
-		if m.current+len(m.slots) <= newPos {
+	if newPos > m.currentPos {
+		if m.currentPos+len(m.slots) <= newPos {
 			// newPos beyond slot count. Clear all
 			for i := range m.slots {
 				m.slots[i].count = 0
@@ -45,11 +43,11 @@ func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 			m.sum = 0
 		} else {
 			// push current to total
-			s := &m.slots[m.current%len(m.slots)]
+			s := &m.slots[m.currentPos%len(m.slots)]
 			m.count += s.count
 			m.sum += s.sum
 			// pop others before newPos
-			for i := m.current + 1; i <= newPos; i++ {
+			for i := m.currentPos + 1; i <= newPos; i++ {
 				s = &m.slots[i%len(m.slots)]
 				m.count -= s.count
 				m.sum -= s.sum
@@ -57,9 +55,9 @@ func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 				s.sum = 0
 			}
 		}
-		m.current = newPos
+		m.currentPos = newPos
 	}
-	return &m.slots[m.current%len(m.slots)]
+	return &m.slots[m.currentPos%len(m.slots)]
 }
 
 // Add a new value to the moving sum

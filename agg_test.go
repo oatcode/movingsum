@@ -16,7 +16,6 @@ import (
 //	...
 func TestSlots(t *testing.T) {
 	ms := NewAggregatedMovingSumByTime(time.Duration(10), 3)
-	ms.start = time.Time{}
 
 	// Slot 0. First 3 ns
 	addAtTime(ms, 10, 0)
