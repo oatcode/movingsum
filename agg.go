@@ -15,7 +15,8 @@ type AggregatedMovingSumByTime struct {
 	slots    []slot
 	start    time.Time
 	current  int
-	sum      slot
+	sum      int
+	count    int
 	sync.Mutex
 }
 
@@ -40,18 +41,18 @@ func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 				m.slots[i].count = 0
 				m.slots[i].sum = 0
 			}
-			m.sum.count = 0
-			m.sum.sum = 0
+			m.count = 0
+			m.sum = 0
 		} else {
 			// push current to total
 			s := &m.slots[m.current%len(m.slots)]
-			m.sum.count += s.count
-			m.sum.sum += s.sum
+			m.count += s.count
+			m.sum += s.sum
 			// pop others before newPos
 			for i := m.current + 1; i <= newPos; i++ {
 				s = &m.slots[i%len(m.slots)]
-				m.sum.count -= s.count
-				m.sum.sum -= s.sum
+				m.count -= s.count
+				m.sum -= s.sum
 				s.count = 0
 				s.sum = 0
 			}
@@ -77,5 +78,5 @@ func (m *AggregatedMovingSumByTime) Get() (sum int, count int) {
 	defer m.Unlock()
 	s := m.getCurrent()
 	// include current slot
-	return m.sum.sum + s.sum, m.sum.count + s.count
+	return m.sum + s.sum, m.count + s.count
 }
