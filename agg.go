@@ -1,6 +1,9 @@
 package movingsum
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type slot struct {
 	sum   int
@@ -12,7 +15,8 @@ type AggregatedMovingSumByTime struct {
 	slots    []slot
 	start    time.Time
 	current  int
-	total    slot
+	sum      slot
+	sync.Mutex
 }
 
 // This uses a ring buffer to store time slots
@@ -36,18 +40,18 @@ func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 				m.slots[i].count = 0
 				m.slots[i].sum = 0
 			}
-			m.total.count = 0
-			m.total.sum = 0
+			m.sum.count = 0
+			m.sum.sum = 0
 		} else {
 			// push current to total
 			s := &m.slots[m.current%len(m.slots)]
-			m.total.count += s.count
-			m.total.sum += s.sum
+			m.sum.count += s.count
+			m.sum.sum += s.sum
 			// pop others before newPos
 			for i := m.current + 1; i <= newPos; i++ {
 				s = &m.slots[i%len(m.slots)]
-				m.total.count -= s.count
-				m.total.sum -= s.sum
+				m.sum.count -= s.count
+				m.sum.sum -= s.sum
 				s.count = 0
 				s.sum = 0
 			}
@@ -57,17 +61,21 @@ func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 	return &m.slots[m.current%len(m.slots)]
 }
 
-// TODO mutex!
 // Add a new value to the moving sum
 func (m *AggregatedMovingSumByTime) Add(value int) {
+	m.Lock()
+	defer m.Unlock()
 	s := m.getCurrent()
 	s.count++
 	s.sum += value
 }
 
+// TODO sum int64?
 // Get returns the moving sum and the count of entries added
 func (m *AggregatedMovingSumByTime) Get() (sum int, count int) {
+	m.Lock()
+	defer m.Unlock()
 	s := m.getCurrent()
 	// include current slot
-	return m.total.sum + s.sum, m.total.count + s.count
+	return m.sum.sum + s.sum, m.sum.count + s.count
 }

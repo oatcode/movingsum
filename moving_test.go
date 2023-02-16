@@ -7,7 +7,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueue(t *testing.T) {
+func TestMovingSum(t *testing.T) {
+	ms := NewMovingSum(3)
+	ms.Add(1)
+	msAssert(t, ms, 1, 1)
+	ms.Add(2)
+	msAssert(t, ms, 3, 2)
+	ms.Add(3)
+	msAssert(t, ms, 6, 3)
+	ms.Add(4)
+	msAssert(t, ms, 9, 3)
+	ms.Add(0)
+	msAssert(t, ms, 7, 3)
+	ms.Add(1)
+	msAssert(t, ms, 5, 3)
+}
+
+func msAssert(t *testing.T, ms *MovingSum, sum int, count int) {
+	s, c := ms.Get()
+	require.Equal(t, sum, s)
+	require.Equal(t, count, c)
+
+}
+
+func TestByTime(t *testing.T) {
 	ms := NewMovingSumByTime(time.Duration(10))
 
 	msAddAtTime(ms, 10, 0)
