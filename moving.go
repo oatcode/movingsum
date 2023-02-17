@@ -1,3 +1,4 @@
+// Package movingsum provides utilities to compute moving sum
 package movingsum
 
 import (
@@ -6,6 +7,7 @@ import (
 	"time"
 )
 
+// MovingSum calculates moving sum with a fixed queue size
 type MovingSum struct {
 	n     int
 	queue *list.List
@@ -13,11 +15,13 @@ type MovingSum struct {
 	sync.RWMutex
 }
 
+// used in MovingSumByTime
 type timedEntry struct {
 	t     time.Time
 	value int
 }
 
+// MovingSumByTime calculates moving sum for a duration
 type MovingSumByTime struct {
 	duration time.Duration
 	queue    *list.List
@@ -25,10 +29,11 @@ type MovingSumByTime struct {
 	sync.Mutex
 }
 
+// for UT purpose
 var timeNow = time.Now
 var timeSince = time.Since
 
-// This is moving sum with max entries
+// NewMovingSum creates moving sum with a max of n entries
 func NewMovingSum(n int) *MovingSum {
 	return &MovingSum{
 		n:     n,
@@ -56,7 +61,7 @@ func (m *MovingSum) Get() (sum int, count int) {
 	return m.sum, m.queue.Len()
 }
 
-// This uses a queue to store entries within the duration
+// NewMovingSumByTime creates moving sum based on duration
 func NewMovingSumByTime(duration time.Duration) *MovingSumByTime {
 	return &MovingSumByTime{
 		queue:    list.New(),

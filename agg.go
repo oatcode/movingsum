@@ -10,6 +10,7 @@ type slot struct {
 	count int
 }
 
+// AggregatedMovingSumByTime calculates moving sum with entries aggregated into time slots
 type AggregatedMovingSumByTime struct {
 	duration   time.Duration
 	slots      []slot
@@ -19,7 +20,7 @@ type AggregatedMovingSumByTime struct {
 	sync.Mutex
 }
 
-// This uses a ring buffer to store time slots
+// NewAggregatedMovingSumByTime creates moving sum for a duration aggregated into n time slots
 func NewAggregatedMovingSumByTime(duration time.Duration, n int) *AggregatedMovingSumByTime {
 	return &AggregatedMovingSumByTime{
 		slots:    make([]slot, n),
@@ -69,7 +70,6 @@ func (m *AggregatedMovingSumByTime) Add(value int) {
 	s.sum += value
 }
 
-// TODO sum int64?
 // Get returns the moving sum and the count of entries added
 func (m *AggregatedMovingSumByTime) Get() (sum int, count int) {
 	m.Lock()
