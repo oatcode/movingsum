@@ -10,7 +10,7 @@ type slot struct {
 	count int
 }
 
-// AggregatedMovingSumByTime calculates moving sum with entries aggregated into time slots
+// AggregatedMovingSumByTime calculates moving sum with entries aggregated into time slots.
 type AggregatedMovingSumByTime struct {
 	duration   time.Duration
 	slots      []slot

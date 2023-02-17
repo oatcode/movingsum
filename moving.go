@@ -21,7 +21,7 @@ type timedEntry struct {
 	value int
 }
 
-// MovingSumByTime calculates moving sum for a duration
+// MovingSumByTime calculates moving sum for a duration.
 type MovingSumByTime struct {
 	duration time.Duration
 	queue    *list.List
