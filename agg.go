@@ -14,6 +14,7 @@ type slot struct {
 type AggregatedMovingSumByTime struct {
 	duration   time.Duration
 	slots      []slot
+	startTime  time.Time
 	currentPos int
 	sum        int
 	count      int
@@ -25,13 +26,15 @@ func NewAggregatedMovingSumByTime(duration time.Duration, n int) *AggregatedMovi
 	return &AggregatedMovingSumByTime{
 		slots:    make([]slot, n),
 		duration: duration,
+		// Truncate start with duration so the slots are aligned with duration
+		startTime: time.Now().Truncate(duration),
 	}
 }
 
 func (m *AggregatedMovingSumByTime) getCurrent() *slot {
 	// slot is delta / (duration / slotCount)
-	// Do multiplication first => (delta * slotCount) / duration
-	delta := timeSince(time.Time{})
+	// Do multiplication first to prevent rounding loss => (delta * slotCount) / duration
+	delta := timeSince(m.startTime)
 	newPos := int((delta * time.Duration(len(m.slots))) / m.duration)
 	if newPos > m.currentPos {
 		if m.currentPos+len(m.slots) <= newPos {
